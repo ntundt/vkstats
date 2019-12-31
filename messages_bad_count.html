@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>VKStats</title>
+	<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+	<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+	<script src="https://kit.fontawesome.com/0f062ce1bf.js" crossorigin="anonymous"></script>
+	<script src="jquery.cookie.js"></script>
+	<script src="js/messages_bad_count.js"></script>
+	<script src="js/utils.js"></script>
+	<script src="js/vk.js"></script>
+	<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+	<script>
+		google.charts.load('current', {'packages':['corechart']});
+	</script>
+	<link rel='icon' href='vkstats128x128.ico' type='image/x-icon'>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" type="text/css" href="css/styles.css">
+</head>
+<body onresize="onResize()">
+	<header class="navbar navbar-expand navbar-dark flex-column flex-md-row bd-navbar d-none d-md-flex" style="position: sticky; top: 0; z-index: 1040; background-color: #4a76a8; justify-content: space-between;">
+		<div>
+		<a class="navbar-brand" href="index.html"><img src="logo.svg" style="height: 20px;position: relative;top: -3px;"> <span style="color:#aaa" data-toggle="popover" data-trigger="hover" data-placement="bottom" data-content="Ещё в разработке">α</span></a><i class="fas fa-question-circle cl-white d-none d-md-inline-block" data-toggle="popover" data-trigger="hover" data-placement="bottom" data-content="Сервис для составления той статистики, которую ВКонтакте ещё не завезли"></i>
+		</div>
+		<div style="position:relative">
+			<i id="set" class="fas fa-user-circle cl-white" style="font-size: 2rem; height:32px; width:32px; display: block;" data-toggle="dropdown" data-trigger="hover" data-placement="bottom"></i>
+			<div class="dropdown-menu dropdown-menu-right dropdown-menu-sw mt-2" aria-labelledby="set">
+				<a href="tokens.html" class="dropdown-item good-text auth-true"><i class="fas fa-check"></i> Вы вошли <span id="moreThanOneToken">(токенов: <span id="tokensCount">0</span>)</span></a>
+				<a href="tokens.html" class="dropdown-item auth-false"><i class="fas fa-times"></i> Вы не вошли</a>
+				<div class="dropdown-divider"></div>
+				<a href="https://oauth.vk.com/authorize?client_id=7263395&redirect_uri=https://ntundt.github.io/vkstats/index.html&scope=140488159&response_type=token&v=5.103" class="dropdown-item"><i class="far fa-meh"></i> Войти стандартно</a>
+				<a href="#" onclick="window.open('https://oauth.vk.com/authorize?client_id=6121396&scope=501202911&redirect_uri=https://oauth.vk.com/blank.html&display=page&response_type=token&revoke=1', '_blank')" target="_blank" class="dropdown-item" data-toggle="modal" data-target="#tokenInput"><i class="far fa-smile"></i> Войти с расширенными правами</a>
+				<h6 class="dropdown-header"><a href="faq.html#whatToSelect">Что выбрать?</a></h6>
+				<div class="dropdown-divider"></div>
+				<a href="faq.html" class="dropdown-item"><i class="fas fa-question"></i> Часто задаваемые вопросы</a>
+				<a href="https://vk.me/id165054978" class="dropdown-item"><i class="fas fa-at"></i> Связаться с разработчиком</a>
+				<a href="#" class="dropdown-item"><i class="fas fa-cog"></i> Настройки</a>
+				<a id="clearCookies" href="#" class="dropdown-item"><i class="fas fa-cookie-bite"></i> Очистить cookie</a>
+				<a href="#" class="dropdown-item"><i class="fas fa-sign-out-alt"></i> Выйти</a>
+			</div>
+		</div>
+	</header>
+	<nav class="navbar navbar-expand-lg navbar-dark bg-light d-md-none" style="background-color: #4a76a8 !important;">
+		<a class="navbar-brand" href="index.html"><img src="logo.svg" style="height: 20px;position: relative;top: -3px;"> <span style="color:#aaa">α</span></a>
+		<i id="set" class="fas fa-user-circle cl-white" style="font-size: 2rem; height:32px; width:32px; display: block;" data-toggle="collapse" data-target="#navbarExpandable" aria-controls="navbarExpandable" aria-expanded="false"></i>
+
+		<div class="collapse navbar-collapse" id="navbarExpandable">
+			<ul class="navbar-nav mr-auto mt-2 mt-lg-0">
+				<li class="nav-item auth-true">
+					<a href="tokens.html" class="nav-link good-text"><i class="fas fa-check"></i> Вы вошли <span id="moreThanOneToken">(токенов: <span id="tokensCount">0</span>)</span></a>
+				</li>
+				<li class="nav-item auth-false">
+					<a href="tokens.html" class="nav-link"><i class="fas fa-times"></i> Вы не вошли</a>
+				</li>
+				<li class="nav-divider"></li>
+				<li class="nav-item">
+					<a href="https://oauth.vk.com/authorize?client_id=7263395&redirect_uri=https://ntundt.github.io/vkstats/index.html&scope=140488159&response_type=token&v=5.103" class="nav-link"><i class="far fa-meh"></i> Войти стандартно</a>
+				</li>
+				<li class="nav-item">
+					<a href="#" onclick="window.open('https://oauth.vk.com/authorize?client_id=6121396&scope=501202911&redirect_uri=https://oauth.vk.com/blank.html&display=page&response_type=token&revoke=1', '_blank')" target="_blank" class="nav-link" data-toggle="modal" data-target="#tokenInput"><i class="far fa-smile"></i> Войти с расширенными правами</a>
+				</li>
+				<li class="nav-item">
+					<a href="faq.html#whatToSelect" class="nav-link">Что выбрать?</a>
+				</li>
+				<li class="nav-divider"></li>
+				<li class="nav-item">
+					<a href="faq.html" class="nav-link"><i class="fas fa-question"></i> Часто задаваемые вопросы</a>
+				</li>
+				<li class="nav-item">
+					<a href="https://vk.me/id165054978" class="nav-link"><i class="fas fa-at"></i> Связаться с разработчиком</a>
+				</li>
+				<li class="nav-item">
+					<a href="#" class="nav-link"><i class="fas fa-cog"></i> Настройки</a>
+				</li>
+				<li class="nav-item">
+					<a id="clearCookies" href="#" class="nav-link"><i class="fas fa-cookie-bite"></i> Очистить cookie</a>
+				</li>
+				<li class="nav-item">
+					<a href="#" class="nav-link"><i class="fas fa-sign-out-alt"></i> Выйти</a>
+				</li>
+			</ul>
+		</div>
+	</nav>
+	<div class="container-fluid">
+		<div class="row justify-content-start">
+			<nav class="col-md-3 col-xl-2 bd-sidebar d-none d-md-block border-right" style="position: sticky; top: 56px; height: calc(100vh - 56px);">
+				<div class="flex-column" style="display: flex; align-items: flex-start;">
+					<a href="index.html#messages" class="btn btn-link mt-3">Сообщения</a>
+					<a href="index.html#communities" class="btn btn-link">Сообщества</a>
+					<a href="index.html#publications" class="btn btn-link">Публикации</a>
+				</div>
+			</nav>
+			<main class="col-12 col-md-9 col-xl-10 py-3 bd-content mw-md" role="main" data-spy="scroll" data-target="#scrollspy">
+				<h1>Количество нецензурной брани за единицу времени</h1>
+				<div class="card mw-md mb-3">
+					<div class="card-header">Настройки скрипта</div>
+					<div class="card-body">
+						<form action="">
+							<div class="form-group row">
+								<label for="access_token_selector" class="col-md-3 col-form-label">Токен</label>
+								<div class="col-md-9">
+									<select name="access_token" id="access_token_selector" class="custom-select form-control">
+									</select>
+								</div>
+							</div>
+							<div class="form-group row">
+								<label for="start_id" class="col-md-3 col-form-label">Начиная с ID <i class="far fa-question-circle" data-toggle="popover" data-trigger="hover" data-placement="bottom" data-content="ID сообщения, с которого нужно начать опрос. Оставьте 0, если не уверены."></i></label>
+								<div class="col-md-9">
+									<input id="start_id" type="number" class="form-control" value="0" min="0">
+								</div>
+							</div>
+							<div class="form-group row">
+								<label for="end_id" class="col-md-3 col-form-label">Заканчивая ID <i class="far fa-question-circle" data-toggle="popover" data-trigger="hover" data-placement="bottom" data-content="ID последнего сообщения, которое нужно обработать. Оставьте 0, чтобы обработать все сообщения до самого последнего полученного."></i></label>
+								<div class="col-md-9">
+									<input id="end_id" type="number" class="form-control" value="0" min="0">
+								</div>
+							</div>
+							<div class="form-group row">
+								<label for="user_id" class="col-md-3 col-form-label">ID подопытного <i class="far fa-question-circle" data-toggle="popover" data-trigger="hover" data-placement="bottom" data-content="ID пользователя, который тестируется. Оставьте 0, чтобы протестировать себя."></i></label>
+								<div class="col-md-9">
+									<input id="user_id" type="number" class="form-control" value="0" min="0">
+								</div>
+							</div>
+							<div class="form-group row">
+								<label for="unit_of_time_selector" class="col-md-3 col-form-label">Единица времени</label>
+								<div class="col-md-9">
+									<select name="unit_of_time" id="unit_of_time_selector" class="custom-select form-control">
+										<option value="2678400">Месяц</option>
+										<option value="604800" selected>Неделя</option>
+										<option value="86400">День</option>
+									</select>
+								</div>
+							</div>
+							<a onclick="run()" href="#" class="btn btn-primary">Начать опрос</a>
+						</form>
+					</div>
+				</div>
+				<div class="card mw-md">
+					<div class="card-header">Результат выполнения</div>
+					<div class="card-body">
+						<div id="progressContainer" class="d-none">
+							<div class="progress">
+								<div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%"></div>
+							</div>
+						</div>
+						<div id="resultContainer" class="d-none img-thumbnail">
+							
+						</div>
+						<div id="downloadButtonContainer" class="mx-auto d-none mt-3" style="width: fit-content;">
+							<a href="#" id="excelSaver" class="mr-3" onclick="Export.excel(Script.result.dataset)"><i class="fas fa-file-excel d-inherit"></i>&nbsp;Сохранить как таблицу Excel</a>
+							<a href="#" id="imageSaver" onclick="Export.image(Script.result.graph)"><i class="fas fa-file-image d-inherit"></i>&nbsp;Сохранить как картинку</a>
+						</div>
+						<div id="nothingHereBox" class="mx-auto" style="width: fit-content">Здесь пока ничего нет.</div>
+					</div>
+				</div>
+			</main>
+		</div>
+	</div>
+
+	<div id="tokenInput" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+		<div class="modal-dialog modal-dialog-centered" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="exampleModalCenterTitle">Вход с расширенными правами</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Закрыть">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<div class="modal-body">
+					<ol style="margin:0">
+						<li>В открывшейся вкладке разрешите приложению доступ к аккаунту</li>
+						<li>Игнорируя предупреждение, скопируйте всё содержимое адресной строки</li>
+						<li>Вставьте сюда</li>
+					</ol>
+					(<a href="faq.html#whatToSelect">Почему нельзя проще?</a>)
+					<label for="tokenInputTextField" class="d-block">Содержимое адресной строки</label>
+					<input id="tokenInputTextField" type="text" class="form-control">
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+					<button type="button" class="btn btn-primary" onclick="Tokens.parseLink($('#tokenInputTextField').val());location.reload()">Сохранить</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script>
+		function onResize() {
+			$('#resultContainer').height($('#resultContainer').width() * 0.7);//0.5625);
+		}
+		onResize();
+
+		let tokens = Tokens.get();
+		for (let i = 0; i < tokens.length; i++) {
+			$('<option>', {value: tokens[i], text: tokens[i]}).appendTo('#access_token_selector');
+		}
+
+		function run() {
+			let access_token = $('#access_token_selector').val();
+			var vk = module_vk(access_token);
+			let args = {};
+			args.start_id = parseInt($('#start_id').val());
+			args.end_id = parseInt($('#end_id').val());
+			args.user_id = parseInt($('#user_id').val());
+			args.time_unit = parseInt($('#unit_of_time_selector').val());
+			script(vk, args);
+		}
+
+		$(function () {
+			$('[data-toggle="popover"]').popover();
+			$('[data-toggle="dropdown"]').dropdown();
+		});
+
+		let tokens_count = Tokens.getCount();
+		if (tokens_count > 0) {
+			$('.auth-true').addClass('d-block');
+			$('#tokensCount').text(tokens_count);
+		} else {
+			$('.auth-false').addClass('d-block');
+		}
+		if (tokens_count > 1) {
+			$('#moreThanOneToken').addClass('d-inline');
+		}
+
+		function clear_cookies() {
+			let cookies = $.cookie()
+			for (let cookie in cookies) {
+				console.log(cookie);
+				$.removeCookie(cookie);
+			}
+			//location.reload();
+		}
+		$('#clearCookies').on('click', clear_cookies);
+	</script>
+</body>
+</html>
