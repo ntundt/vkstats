@@ -9,19 +9,24 @@
 	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
 	<script src="https://kit.fontawesome.com/0f062ce1bf.js" crossorigin="anonymous"></script>
 	<script src="jquery.cookie.js"></script>
+	<script src="js/messages_count.js"></script>
 	<script src="js/utils.js"></script>
 	<script src="js/vk.js"></script>
+	<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+	<script>
+		google.charts.load('current', {'packages':['corechart']});
+	</script>
 	<link rel='icon' href='vkstats128x128.ico' type='image/x-icon'>
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" type="text/css" href="css/styles.css">
 </head>
-<body>
+<body onresize="onResize()">
 	<header class="navbar navbar-expand navbar-dark flex-column flex-md-row bd-navbar d-none d-md-flex" style="position: sticky; top: 0; z-index: 1040; background-color: #4a76a8; justify-content: space-between;">
 		<div>
 		<a class="navbar-brand" href="index.html"><img src="logo.svg" style="height: 20px;position: relative;top: -3px;"> <span style="color:#aaa" data-toggle="popover" data-trigger="hover" data-placement="bottom" data-content="Ещё в разработке">α</span></a><i class="fas fa-question-circle cl-white d-none d-md-inline-block" data-toggle="popover" data-trigger="hover" data-placement="bottom" data-content="Сервис для составления той статистики, которую ВКонтакте ещё не завезли"></i>
 		</div>
 		<div style="position:relative">
-			<i id="set" class="fas fa-user-circle cl-white" style="font-size: 2rem; height:32px; width:32px; display: block;" data-toggle="popover" data-trigger="hover" data-placement="bottom" title="Похоже, Вы здесь в первый раз" data-content="Пожалуйста, войдите в аккаунт"></i>
+			<i id="set" class="fas fa-user-circle cl-white" style="font-size: 2rem; height:32px; width:32px; display: block;" data-toggle="dropdown" data-trigger="hover" data-placement="bottom"></i>
 			<div class="dropdown-menu dropdown-menu-right dropdown-menu-sw mt-2" aria-labelledby="set">
 				<a href="tokens.html" class="dropdown-item good-text auth-true"><i class="fas fa-check"></i> Вы вошли <span id="moreThanOneToken">(токенов: <span id="tokensCount">0</span>)</span></a>
 				<a href="tokens.html" class="dropdown-item auth-false"><i class="fas fa-times"></i> Вы не вошли</a>
@@ -81,49 +86,101 @@
 	</nav>
 	<div class="container-fluid">
 		<div class="row justify-content-start">
-			<nav id="scrollspy" class="col-md-3 col-xl-2 bd-sidebar d-none d-md-block border-right" style="position: sticky; top: 56px; height: calc(100vh - 56px);">
+			<nav class="col-md-3 col-xl-2 bd-sidebar d-none d-md-block border-right" style="position: sticky; top: 56px; height: calc(100vh - 56px);">
 				<div class="flex-column" style="display: flex; align-items: flex-start;">
 					<a href="index.html#messages" class="btn btn-link mt-3">Сообщения</a>
 					<a href="index.html#communities" class="btn btn-link">Сообщества</a>
 					<a href="index.html#publications" class="btn btn-link">Публикации</a>
 				</div>
 			</nav>
-			<main class="col-12 col-md-9 col-xl-10 py-3 bd-content" role="main" data-spy="scroll" data-target="#scrollspy">
-				<h1 class="mb-3" id="messages">Сообщения</h1>
+			<main class="col-12 col-md-9 col-xl-10 py-3 bd-content mw-md" role="main" data-spy="scroll" data-target="#scrollspy">
+				<h1>Количество сообщений за единицу времени</h1>
 				<div class="card mw-md mb-3">
-					<div class="card-header">Использование нецензурной брани в сообщениях</div>
+					<div class="card-header">Настройки скрипта</div>
 					<div class="card-body">
-						<p class="card-text">График: количество использованных бранных слов за единицу времени</p>
-						<a href="messages_bad_count.html" class="btn btn-primary" role="button">Нарисовать</a>
+						<form action="">
+							<div class="form-group row">
+								<label for="access_token_selector" class="col-md-3 col-form-label">Токен</label>
+								<div class="col-md-9">
+									<select name="access_token" id="access_token_selector" class="custom-select form-control">
+									</select>
+								</div>
+							</div>
+							<div class="form-group row">
+								<label for="start_id" class="col-md-3 col-form-label">Начиная с ID <i class="far fa-question-circle" data-toggle="popover" data-trigger="hover" data-placement="bottom" data-content="ID сообщения, с которого нужно начать опрос. Оставьте 0, если не уверены."></i></label>
+								<div class="col-md-9">
+									<input id="start_id" type="number" class="form-control" value="0" min="0">
+								</div>
+							</div>
+							<div class="form-group row">
+								<label for="end_id" class="col-md-3 col-form-label">Заканчивая ID <i class="far fa-question-circle" data-toggle="popover" data-trigger="hover" data-placement="bottom" data-content="ID последнего сообщения, которое нужно обработать. Оставьте 0, чтобы обработать все сообщения до самого последнего полученного."></i></label>
+								<div class="col-md-9">
+									<input id="end_id" type="number" class="form-control" value="0" min="0">
+								</div>
+							</div>
+							<div class="form-group row">
+								<label for="user_id" class="col-md-3 col-form-label">ID подопытного <i class="far fa-question-circle" data-toggle="popover" data-trigger="hover" data-placement="bottom" data-content="ID пользователя, который тестируется. Оставьте 0, чтобы протестировать себя."></i></label>
+								<div class="col-md-9">
+									<input id="user_id" type="number" class="form-control" value="0" min="0">
+								</div>
+							</div>
+							<div class="form-group row">
+								<label class="col-md-3 col-form-label"></label>
+								<div class="col-md-9">
+									<div class="custom-control custom-checkbox">
+										<input type="checkbox" class="custom-control-input" id="cUser" checked>
+										<label class="custom-control-label" for="cUser">Считать сообщения от себя (или от подопытного)</label>
+									</div>
+									<div class="custom-control custom-checkbox">
+										<input type="checkbox" class="custom-control-input" id="cUserConvo" checked>
+										<label class="custom-control-label" for="cUserConvo">Считать сообщения от себя (или от подопытного) в беседах</label>
+									</div>
+									<div class="custom-control custom-checkbox">
+										<input type="checkbox" class="custom-control-input" id="cOthers">
+										<label class="custom-control-label" for="cOthers">Считать сообщения от других пользователей</label>
+									</div>
+									<div class="custom-control custom-checkbox">
+										<input type="checkbox" class="custom-control-input" id="cOthersConvo">
+										<label class="custom-control-label" for="cOthersConvo">Считать сообщения от других пользователей в беседах</label>
+									</div>
+								</div>
+							</div>
+							<div class="form-group row">
+								<label for="unit_of_time_selector" class="col-md-3 col-form-label">Единица времени</label>
+								<div class="col-md-9">
+									<select name="unit_of_time" id="unit_of_time_selector" class="custom-select form-control">
+										<option value="2678400">Месяц</option>
+										<option value="604800" selected>Неделя</option>
+										<option value="86400">День</option>
+									</select>
+								</div>
+							</div>
+							<a onclick="run()" href="#" class="btn btn-primary">Начать опрос</a>
+						</form>
 					</div>
 				</div>
-				<div class="card mw-md mb-3">
-					<div class="card-header">Принятые и отправленные сообщения</div>
-					<div class="card-body">
-						<p class="card-text">График: количество принятых и отправленных сообщений за единицу времени</p>
-						<a href="messages_count.html" class="btn btn-primary" role="button">Нарисовать</a>
-					</div>
-				</div>
-				<h1 class="mb-3" id="communities">Сообщества</h1>
-				<div class="card mw-md mb-3">
-					<div class="card-header">Общие участники групп <span class="badge badge-primary">TODO</span></div>
-					<div class="card-body">
-						<p class="card-text">Список общих участников двух групп</p>
-						<a href="#" class="btn btn-primary disabled" role="button">Составить</a>
-					</div>
-				</div>
-				<h1 class="mb-3" id="publications">Публикации</h1>
 				<div class="card mw-md">
-					<div class="card-header">Анализ опросов <span class="badge badge-primary">TODO</span></div>
+					<div class="card-header">Результат выполнения</div>
 					<div class="card-body">
-						<p class="card-text">Посмотреть, сколько участников опроса являются подписчиками указанной группы</p>
-						<a href="#" class="btn btn-primary disabled" role="button">Посмотреть</a>
+						<div id="progressContainer" class="d-none">
+							<div class="progress">
+								<div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%"></div>
+							</div>
+						</div>
+						<div id="resultContainer" class="d-none img-thumbnail">
+							
+						</div>
+						<div id="downloadButtonContainer" class="mx-auto d-none mt-3" style="width: fit-content;">
+							<a href="#" id="excelSaver" class="mr-3" onclick="Export.excel(Script.result.dataset)"><i class="fas fa-file-excel d-inherit"></i>&nbsp;Сохранить как таблицу Excel</a>
+							<a href="#" id="imageSaver" onclick="Export.image(Script.result.graph)"><i class="fas fa-file-image d-inherit"></i>&nbsp;Сохранить как картинку</a>
+						</div>
+						<div id="nothingHereBox" class="mx-auto" style="width: fit-content">Здесь пока ничего нет.</div>
 					</div>
 				</div>
 			</main>
 		</div>
 	</div>
-	
+
 	<div id="tokenInput" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
 		<div class="modal-dialog modal-dialog-centered" role="document">
 			<div class="modal-content">
@@ -152,35 +209,35 @@
 	</div>
 
 	<script>
-		if ($(location).attr('hash').length > 1) {
-			try {
-				console.log('attempt');
-				Tokens.parseLink($(location).attr('href'));
-			} catch (e) {
-				console.log(e);
-			}
+		function onResize() {
+			$('#resultContainer').height($('#resultContainer').width() * 0.7);//0.5625);
+		}
+		onResize();
+
+		let tokens = Tokens.get();
+		for (let i = 0; i < tokens.length; i++) {
+			$('<option>', {value: tokens[i], text: tokens[i]}).appendTo('#access_token_selector');
 		}
 
-		function replacePopoverWithDropdown() {
-			$('#set').popover('dispose');
-			$('#set').attr('data-toggle', 'dropdown');
-			$('#set').dropdown();
-			$('#set').on('click', undefined);
-			$('#set').attr('title', '');
+		function run() {
+			let access_token = $('#access_token_selector').val();
+			var vk = module_vk(access_token);
+			let args = {consider:{}};
+			args.start_id = parseInt($('#start_id').val());
+			args.end_id = parseInt($('#end_id').val());
+			args.user_id = parseInt($('#user_id').val());
+			args.time_unit = parseInt($('#unit_of_time_selector').val());
+			args.consider.from_user = $('#cUser').is(':checked');
+			args.consider.from_user_conversations = $('#cUserConvo').is(':checked');
+			args.consider.from_others = $('#cOthers').is(':checked');
+			args.consider.from_others_conversations = $('#cOthersConvo').is(':checked');
+			script(vk, args);
 		}
+
 		$(function () {
-			$('[data-toggle="popover"]').popover()
+			$('[data-toggle="popover"]').popover();
+			$('[data-toggle="dropdown"]').dropdown();
 		});
-		if (!$.cookie('access_token') && !$.cookie("popover_has_been_shown")) {
-			$('#set').popover('show');
-			$('#set').on('hidden.bs.popover', replacePopoverWithDropdown);
-			$('#set').on('click', replacePopoverWithDropdown);
-			$.cookie('popover_has_been_shown', true);
-		} else {
-			$('#set').attr('data-toggle', 'dropdown');
-			$('#set').dropdown();
-			$('#set').attr('title', '');
-		}
 
 		let tokens_count = Tokens.getCount();
 		if (tokens_count > 0) {
