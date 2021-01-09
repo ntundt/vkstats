@@ -9,7 +9,7 @@
 	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
 	<script src="https://kit.fontawesome.com/0f062ce1bf.js" crossorigin="anonymous"></script>
 	<script src="jquery.cookie.js"></script>
-	<script src="js/messages_count.js"></script>
+	<script src="js/find_comments.js"></script>
 	<script src="js/utils.js"></script>
 	<script src="js/vk.js"></script>
 	<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
@@ -99,11 +99,13 @@
 				</div>
 			</nav>
 			<main class="col-12 col-md-9 col-xl-10 py-3 bd-content mw-md" role="main" data-spy="scroll" data-target="#scrollspy">
-				<h1>Количество сообщений за единицу времени</h1>
+				<h1>Найти комментарии пользователя</h1>
+				
 				<div class="card mw-md mb-3">
 					<div class="card-header">Настройки скрипта</div>
 					<div class="card-body">
 						<form action="">
+
 							<div class="form-group row">
 								<label for="access_token_selector" class="col-md-3 col-form-label">Токен</label>
 								<div class="col-md-9">
@@ -111,62 +113,43 @@
 									</select>
 								</div>
 							</div>
+	
 							<div class="form-group row">
-								<label for="start_id" class="col-md-3 col-form-label">Начиная с ID <i class="far fa-question-circle" data-toggle="popover" data-trigger="hover" data-placement="bottom" data-content="ID сообщения, с которого нужно начать опрос. Оставьте 0, если не уверены."></i></label>
-								<div class="col-md-9">
-									<input id="start_id" type="number" class="form-control" value="0" min="0">
-								</div>
-							</div>
-							<div class="form-group row">
-								<label for="end_id" class="col-md-3 col-form-label">Заканчивая ID <i class="far fa-question-circle" data-toggle="popover" data-trigger="hover" data-placement="bottom" data-content="ID последнего сообщения, которое нужно обработать. Оставьте 0, чтобы обработать все сообщения до самого последнего полученного."></i></label>
-								<div class="col-md-9">
-									<input id="end_id" type="number" class="form-control" value="0" min="0">
-								</div>
-							</div>
-							<div class="form-group row">
-								<label for="user_id" class="col-md-3 col-form-label">ID подопытного <i class="far fa-question-circle" data-toggle="popover" data-trigger="hover" data-placement="bottom" data-content="ID пользователя, который тестируется. Оставьте 0, чтобы протестировать себя."></i></label>
+								<label for="user_id" class="col-md-3 col-form-label">ID подопытного <i class="far fa-question-circle" data-toggle="popover" data-trigger="hover" data-placement="bottom" data-content="ID пользователя, комментарии которого нужно найти. Оставьте 0, чтобы найти свои."></i></label>
 								<div class="col-md-9">
 									<input id="user_id" type="number" class="form-control" value="0" min="0">
 								</div>
 							</div>
+
+							<div class="form-group row">
+								<label for="otherPlacesForSearch" class="col-md-3 col-form-label">Дополнительные места <i class="far fa-question-circle" data-toggle="popover" data-trigger="hover" data-placement="bottom" data-content="Список разделённых запятой идентификаторов сообществ (пользователей), на которые пользователь не подписан (с которыми не дружит), где вы также хотите поскать комментарии."></i></label>
+								<div class="col-md-9">
+									<textarea id="otherPlacesForSearch" rows="5" class="form-control"></textarea>
+								</div>
+							</div>
+
 							<div class="form-group row">
 								<label class="col-md-3 col-form-label"></label>
 								<div class="col-md-9">
 									<div class="custom-control custom-checkbox">
-										<input type="checkbox" class="custom-control-input" id="cUser" checked>
-										<label class="custom-control-label" for="cUser">Считать сообщения от себя (или от подопытного)</label>
+										<input type="checkbox" class="custom-control-input" id="cSearchInCommunities" checked>
+										<label class="custom-control-label" for="cSearchInCommunities">Искать в сообществах</label>
 									</div>
 									<div class="custom-control custom-checkbox">
-										<input type="checkbox" class="custom-control-input" id="cUserConvo" checked>
-										<label class="custom-control-label" for="cUserConvo">Считать сообщения от себя (или от подопытного) в беседах</label>
-									</div>
-									<div class="custom-control custom-checkbox">
-										<input type="checkbox" class="custom-control-input" id="cOthers">
-										<label class="custom-control-label" for="cOthers">Считать сообщения от других пользователей</label>
-									</div>
-									<div class="custom-control custom-checkbox">
-										<input type="checkbox" class="custom-control-input" id="cOthersConvo">
-										<label class="custom-control-label" for="cOthersConvo">Считать сообщения от других пользователей в беседах</label>
+										<input type="checkbox" class="custom-control-input" id="cSearchOnFriendsPages" checked>
+										<label class="custom-control-label" for="cSearchOnFriendsPages">Искать на страницах друзей</label>
 									</div>
 								</div>
 							</div>
-							<div class="form-group row">
-								<label for="unit_of_time_selector" class="col-md-3 col-form-label">Единица времени</label>
-								<div class="col-md-9">
-									<select name="unit_of_time" id="unit_of_time_selector" class="custom-select form-control">
-										<option value="2678400">Месяц</option>
-										<option value="604800" selected>Неделя</option>
-										<option value="86400">День</option>
-									</select>
-								</div>
-							</div>
-							<a onclick="run()" href="#" class="btn btn-primary">Начать опрос</a>
+
+							<a onclick="run()" href="#" class="btn btn-primary">Найти</a>
 						</form>
 					</div>
 				</div>
+
 				<div class="card mw-md">
 					<div class="card-header">Результат выполнения</div>
-					<div class="card-body">
+					<div class="card-body" id="executionResult">
 						<div id="progressContainer" class="d-none">
 							<div class="progress">
 								<div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%"></div>
@@ -175,6 +158,14 @@
 						<div id="resultContainer" class="d-none img-thumbnail">
 							
 						</div>
+						<div class="d-none" id="statusContainer">
+							<div class="d-flex justify-content-center d-none" id="statusSpinner">
+								<div class="spinner-border text-primary" role="status">
+									<span class="sr-only"></span>
+								</div>
+								<span id="statusText" style="margin: 5px"></span>
+							</div>
+						</div>
 						<div id="downloadButtonContainer" class="mx-auto d-none mt-3" style="width: fit-content;">
 							<a href="#" id="excelSaver" class="mr-3" onclick="Export.excel(Script.result.dataset)"><i class="fas fa-file-excel d-inherit"></i>&nbsp;Сохранить как таблицу Excel</a>
 							<a href="#" id="imageSaver" onclick="Export.image(Script.result.graph)"><i class="fas fa-file-image d-inherit"></i>&nbsp;Сохранить как картинку</a>
@@ -182,6 +173,7 @@
 						<div id="nothingHereBox" class="mx-auto" style="width: fit-content">Здесь пока ничего нет.</div>
 					</div>
 				</div>
+
 			</main>
 		</div>
 	</div>
@@ -227,15 +219,15 @@
 		function run() {
 			let access_token = $('#access_token_selector').val();
 			var vk = module_vk(access_token);
-			let args = {consider:{}};
-			args.start_id = parseInt($('#start_id').val());
-			args.end_id = parseInt($('#end_id').val());
+			let args = {};
 			args.user_id = parseInt($('#user_id').val());
-			args.time_unit = parseInt($('#unit_of_time_selector').val());
-			args.consider.from_user = $('#cUser').is(':checked');
-			args.consider.from_user_conversations = $('#cUserConvo').is(':checked');
-			args.consider.from_others = $('#cOthers').is(':checked');
-			args.consider.from_others_conversations = $('#cOthersConvo').is(':checked');
+			let places = $('#otherPlacesForSearch').val().split(/[ ,]+/);
+			for (let i = 0; i < places.length; i++) {
+				places[i] = parseInt(places[i]);
+			}
+			args.alsoCheck = places;
+			args.checkCommunities = $('#cSearchInCommunities').is(':checked');
+			args.checkFriends = $('#cSearchOnFriendsPages').is(':checked');
 			script(vk, args);
 		}
 

