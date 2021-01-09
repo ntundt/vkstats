@@ -15,7 +15,6 @@ var script = function(vk, Args) {
 		}, r => {
 			for (let i = 0; i < r.response.items.length; i++) {
 				if (r.response.items[i].from_id == Args.user_id) {
-					console.log(owner_id + " " + post_id);
 					let d = new Date(r.response.items[i].date*1000);
 					$('#foundContainer').append(`
 						<li class="list-group-item">
@@ -64,7 +63,7 @@ var script = function(vk, Args) {
 		});
 
 
-		if (Args.alsoCheck.length > 0) {
+		if (Args.alsoCheck.length > 0 && Args.alsoCheck[0] === Args.alsoCheck[0]) {
 			Script.execution.setCurrentStatus("Получаем данные о пользователях и сообществах…");
 			let communities = [];
 			let users = [];
