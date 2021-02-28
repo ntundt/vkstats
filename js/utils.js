@@ -84,9 +84,10 @@ var Tokens = {
 		market: [134217728, 27, 'товары']
 	},
 	get: () => {
+		let count = Tokens.getCount();
 		let result = [];
-		for (let i = 0; i < 10; i++) {
-			let token = $.cookie('access_token_' + i);
+		for (let i = 0; i < count; i++) {
+			let token = localStorage.getItem('access_token_' + i);
 			if (token) {
 				result.push(token);
 			}
@@ -94,42 +95,61 @@ var Tokens = {
 		return result;
 	},
 	getCount: () => {
-		let count = 0;
-		for (let i = 0; i < 10; i++) {
-			if ($.cookie('access_token_' + i)) {
-				count++;
-			}
+		let count = localStorage.getItem('tokens_count');
+		if (!count) {
+			count = 0;
+			localStorage.setItem('tokens_count', 0);
 		}
 		return count;
 	},
 	add: token => {
-		for (let i = 0; i < 10; i++) {
-		 	if ($.cookie('access_token_' + i) == token) {
+		let count = Tokens.getCount();
+		for (let i = 0; i < count; i++) {
+		 	if (localStorage.getItem('access_token_' + i) == token) {
 		 		return;
 		 	}
 		}
-		for (let i = 0; i < 10; i++) {
-			if (!$.cookie('access_token_' + i)) {
-				$.cookie('access_token_' + i, token);
+		for (let i = 0; i < count + 1; i++) {
+			if (!localStorage.getItem('access_token_' + i)) {
+				localStorage.setItem('access_token_' + i, token);
+				localStorage.setItem('tokens_count', count + 1); 
 				return;
 			}
 		}
+		Token.getScope(token);
+		Token.getData(token);
 	},
 	remove: item => {
+		let count = Tokens.getCount();
 		if (typeof item == 'number') {
-			$.removeCookie('access_token_' + item, {path: '/vkstats'});
-		} else if (typeof (""+item) == 'string') {
-			for (let i = 0; i < 10; i++) {
-				if ($.cookie('access_token_' + i) == item) {
-					$.removeCookie('access_token_' + i, {path: '/vkstats'});
-					return;
+			localStorage.removeItem('access_token_' + item);
+		} else if (typeof (''+item) == 'string') {
+			for (let i = 0; i < count; i++) {
+				if (localStorage.getItem('access_token_' + i) == item) {
+					localStorage.removeItem('access_token_' + i);
 				}
 			}
 		}
 	},
+	removeBlankSpaces: () => {
+		let count = Tokens.getCount();
+		let tokens = [];
+		for (let i = 0; i < count; i++) {
+			let item = localStorage.getItem('access_token_' + i);
+			if (item) {
+				tokens.push(item);
+			}
+		}
+		Tokens.clear();
+		for (let i = 0; i < tokens.length; i++) {
+			localStorage.setItem('access_token_' + i, tokens[i]);
+		}
+		localStorage.setItem('tokens_count', tokens.length);
+	},
 	clear: () => {
-		for (let i = 0; i < 10; i++) {
-			Tokens.remove(i);
+		let tokens = Tokens.get();
+		for (token in tokens) {
+			Tokens.remove(token);
 		}
 	},
 	parseLink: (link, callback) => {
@@ -139,7 +159,7 @@ var Tokens = {
 		}
 		var queryString = link.substring( link.indexOf('#') + 1 );
 		var params = {}, queries, temp, i, l;
-		queries = queryString.split("&");
+		queries = queryString.split('&');
 		for (let i = 0, l = queries.length; i < l; i++) {
 			temp = queries[i].split('=');
 			params[temp[0]] = temp[1];
@@ -159,24 +179,71 @@ var Tokens = {
 	},
 	getScope: token => {
 		let vk = module_vk(token);
-		return new Promise(function(resolve, fail) {
-			vk._api('account.getAppPermissions', {}, r => {
-				resolve(r.response);
-			});
-		});
+		let data = localStorage.getItem(token + '_data');
+		if (data) {
+			if (JSON.parse(data).scope) {
+				return new Promise((function(resolve, fail) {
+					resolve(JSON.parse(this).scope);
+				}).bind(data));
+			}
+		} else {
+			return new Promise((function(resolve, fail) {
+				vk._api('account.getAppPermissions', {}, (function(r) {
+					let data = localStorage.getItem(this.token + '_data');
+					if (data) {
+						data = JSON.parse(data);
+					} else {
+						data = {};
+					}
+					data.scope = r.response;
+					localStorage.setItem(this.token + '_data', JSON.stringify(data));
+					resolve(r.response);
+				}).bind(this));
+			}).bind({
+				token: token
+			}));
+		}
+	},
+	getData: token => {
+		let vk = module_vk(token);
+		let data = localStorage.getItem(token + '_data');
+		if (JSON.parse(data).first_name) {
+			return new Promise((function(resolve, fail) {
+				resolve(JSON.parse(this));
+			}).bind(data));
+		} else {
+			return new Promise((function(resolve, fail) {
+				vk._api('users.get', {fields: 'photo_100'}, (function(r) {
+					let data = localStorage.getItem(this.token + '_data');
+					if (data) {
+						data = JSON.parse(data);
+					} else {
+						data = {};
+					}
+					data.first_name = r.response[0].first_name;
+					data.last_name = r.response[0].last_name;
+					data.id = r.response[0].id;
+					data.photo = r.response[0].photo_100;
+					localStorage.setItem(this.token + '_data', JSON.stringify(data));
+					resolve(data);
+				}).bind(this));
+			}).bind({
+				token: token
+			}));
+		}	
 	}
 }
 
 var Export = {
 	excel: array => {
-		let csvContent = "";
+		let csvContent = '';
 		array.forEach(rowItem => {
 			rowItem.forEach(colItem => {
 				csvContent += colItem + ',';
 			});
-			csvContent += "\r\n";
+			csvContent += '\r\n';
 		});
-		csvContent = "data:application/csv," + encodeURIComponent(csvContent);
+		csvContent = 'data:application/csv,' + encodeURIComponent(csvContent);
 		let link = $('#excelSaver');
 		link.attr('href', csvContent); 
 		link.attr('download', Export.getFileName() + '.csv');
@@ -190,6 +257,6 @@ var Export = {
 	},
 	getFileName: () => {
 		let date = new Date();
-		return "Poll-" + date.getDate() + "-" + date.getMonth() + "-" + date.getFullYear();
+		return 'Poll-' + date.getDate() + '-' + date.getMonth() + '-' + date.getFullYear();
 	}
 }
