@@ -211,10 +211,14 @@
 		}
 		onResize();
 
-		let tokens = Tokens.get();
-		for (let i = 0; i < tokens.length; i++) {
-			$('<option>', {value: tokens[i], text: tokens[i]}).appendTo('#access_token_selector');
-		}
+		(async function() {
+			let tokens = Tokens.get();
+			for (let i = 0; i < tokens.length; i++) {
+				let data = await Tokens.getData(tokens[i]);
+				let text = data.first_name + ' ' + data.last_name + ' id' + data.id + ' (' + tokens[i].slice(0, 5) + '…' + tokens[i].slice(80, 85) + ')';
+				$('<option>', {value: tokens[i], text: text}).appendTo('#access_token_selector');
+			}
+		})();
 
 		function run() {
 			let access_token = $('#access_token_selector').val();
